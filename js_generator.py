@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from textwrap import dedent
-from typing import Generic, TypeVar, Type, Callable, ParamSpec, Union, Any, Optional
+from typing import Generic, TypeVar, Type, Callable, Union, Any, Optional
 
 from node_types import NodeType
 
@@ -43,7 +43,7 @@ class Generating:
             return
         pin_generation = self.generate(node_type.pin_generator)
         properties = ";\n            ".join(
-            f""
+            self.generate(prop).format(name=name) for name, prop in node_type.properties.items()
         )
         code = dedent(f"""
         function {node_type.id}()
@@ -54,10 +54,38 @@ class Generating:
             }};
             this.pin_generation();
         }}
-        {node_type.id}.title = {node_type.name};
-        LiterGraph.registerNodeType("{'/'.join((*node_type.category, node_type.id))}", {node_type.id})
+        {node_type.id}.title = {node_type.name!r};
+        LiteGraph.registerNodeType({'/'.join((*node_type.category, node_type.id))!r}, {node_type.id})
         """)
         self.code_blocks[node_type] = code
 
     def build(self) -> str:
-        pass
+        return '\n\n'.join(filter(None, self.code_blocks.values()))
+
+
+
+@dataclass
+class RegisterManager:
+    static: dict[type, str] = field(default_factory=dict)
+    dynamic: dict[type, Union[Callable[..., str]]] = field(default_factory=dict)
+    _registered_to: list[JSGenerator] = field(default_factory=list)
+
+    def register(self, t, static=None, dynamic=None):
+        assert t not in self.static
+        self.static[t] = static
+
+        def set_dynamic(f):
+            self.dynamic[t] = f
+            return f
+
+        if dynamic is None:
+            return set_dynamic
+        else:
+            set_dynamic(dynamic)
+
+    def register_to(self, gen: JSGenerator):
+        if gen in self._registered_to:
+            return
+        self._registered_to.append(gen)
+        for t in (set(self.static) | set(self.dynamic)):
+            gen.register(t, self.static.get(t, None), self.dynamic.get(t, ''))

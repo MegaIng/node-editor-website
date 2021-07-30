@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Literal, Generic, TypeVar, Union, TYPE_CHECKING
+from typing import Any, Literal, Generic, TypeVar, Union, TYPE_CHECKING, final
 
 if TYPE_CHECKING:
     from typing import TypeAlias
@@ -84,6 +84,7 @@ class SimpleDataType(DataType):
 
 
 @dataclass(frozen=True)
+@final
 class Pin:
     name: str
     in_out: Literal["in", "out"]
@@ -216,7 +217,8 @@ class ChoicesProperty(Property[str]):
         return value in self.choices
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
+@final
 class NodeType:
     category: tuple[str, ...]
     id: str  # Valid Python/JavaScript Id
@@ -247,6 +249,7 @@ class NodeType:
 
 
 @dataclass
+@final
 class Node:
     id: str
     type: NodeType
