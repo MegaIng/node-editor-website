@@ -1,0 +1,16 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='litegraph.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='litegraph.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('node_edit_js_nodes', module_name=module_name) }}"></script>
+</head>
+<body style='width:100%; height:100%'>
+<canvas id='mycanvas' width='1024' height='720' style='border: 1px solid'></canvas>
+<script>
+    var graph = new LGraph();
+
+    var canvas = new LGraphCanvas("#mycanvas", graph);
+    graph.start()
+</script>
+</body>
+</html>
